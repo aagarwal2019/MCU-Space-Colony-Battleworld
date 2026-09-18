@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Chakra Petch', sans-serif;
+  }
+
+  .font-mono-tech {
+    font-family: 'Rajdhani', monospace;
+  }
+}
+
+/* Sci-Fi Grid and Glow Utilities */
+.scifi-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+}
+
+.sakaar-dust {
+  background: radial-gradient(ellipse at 50% -20%, rgba(245, 158, 11, 0.15), transparent 70%),
+              radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.12), transparent 60%),
+              radial-gradient(ellipse at 20% 90%, rgba(6, 182, 212, 0.1), transparent 50%);
+}
+
+.hud-panel {
+  background: rgba(13, 19, 33, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 0 16px 0 rgba(0, 240, 255, 0.03);
+}
+
+.hud-panel-warning {
+  background: rgba(33, 13, 13, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.2);
+}
+
+/* Custom scrollbars for cybernetic terminal feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0284c7;
+}
+
+/* Subtle transition animation for Incursion Threat Sparkline line plot inside #doomsday-threat-tooltip */
+#doomsday-threat-tooltip .recharts-curve.recharts-area-curve,
+#doomsday-threat-tooltip .recharts-curve.recharts-area-area,
+#doomsday-threat-tooltip path.recharts-curve {
+  transition: d 0.85s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.6s ease-in-out, fill 0.6s ease-in-out;
+}
+
+/* Subtle animated threat pulse background overlay for #doomsday-threat-tooltip */
+@keyframes doomsday-threat-pulse {
+  0%, 100% {
+    opacity: var(--threat-pulse-min-op, 0.12);
+    transform: scale(0.99);
+  }
+  50% {
+    opacity: var(--threat-pulse-max-op, 0.38);
+    transform: scale(1.015);
+  }
+}
+
+#doomsday-threat-tooltip .threat-pulse-overlay {
+  animation: doomsday-threat-pulse var(--threat-pulse-speed, 2.5s) ease-in-out infinite;
+  will-change: opacity, transform;
+}
