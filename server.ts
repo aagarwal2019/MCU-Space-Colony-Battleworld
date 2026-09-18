@@ -13,6 +13,12 @@ import {
   getMovieStill, 
   getAllMovieStills 
 } from "./src/server/moviePhotoService";
+import { incursionRouter } from "./src/server/incursionRoutes";
+import { arenaRouter } from "./src/server/arenaRoutes";
+import { marketRouter } from "./src/server/marketRoutes";
+import { colonyPersistenceRouter } from "./src/server/colonyPersistenceRoutes";
+import { relicForgeRouter } from "./src/server/relicForgeRoutes";
+import { marvelGatewayRouter } from "./src/server/marvelGatewayRoutes";
 
 dotenv.config();
 
@@ -45,6 +51,14 @@ function getAI(): GoogleGenAI | null {
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "Sakaar MCU Colony Backend", time: Date.now() });
 });
+
+// --- RESTful Microservices & Game Systems ---
+app.use("/api/incursions", incursionRouter);
+app.use("/api/arena", arenaRouter);
+app.use("/api/market", marketRouter);
+app.use("/api/colony", colonyPersistenceRouter);
+app.use("/api/relics", relicForgeRouter);
+app.use("/api/marvel-gateway", marvelGatewayRouter);
 
 // --- Marvel Cinematic Universe Character Photo & Profile Picture API ---
 // 1. Photo Catalog Endpoint (lists all 56 heroes & villains with metadata and image endpoints)

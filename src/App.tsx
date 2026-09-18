@@ -26,7 +26,8 @@ import {
   Camera,
   Ticket,
   Swords,
-  Bot
+  Bot,
+  Server
 } from 'lucide-react';
 
 import { 
@@ -75,6 +76,7 @@ import { DoomsdayClockDashboard } from './components/DoomsdayClockDashboard';
 import { BattleworldCommandView } from './components/BattleworldCommandView';
 import { AutonomousCoPilotWidget } from './components/AutonomousCoPilotWidget';
 import { GeminiColonyGuideChatbot } from './components/GeminiColonyGuideChatbot';
+import { RestfulServicesDashboard } from './components/RestfulServicesDashboard';
 import { IncursionSparkline, IncursionHistoryPoint } from './components/IncursionSparkline';
 
 const SAVE_KEY = 'sakaar_outpost_colony_v1';
@@ -256,6 +258,8 @@ export default function App() {
   const [isMCUPhotosApiOpen, setIsMCUPhotosApiOpen] = useState<boolean>(false);
   const [photosApiHeroId, setPhotosApiHeroId] = useState<string | null>(null);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState<boolean>(false);
+  const [isRestfulHubOpen, setIsRestfulHubOpen] = useState<boolean>(false);
+  const [restfulInitialTab, setRestfulInitialTab] = useState<'incursions' | 'arena' | 'market' | 'cloud' | 'relics' | 'marvel'>('incursions');
   const [userBookings, setUserBookings] = useState<MovieTicketBooking[]>(() => {
     try {
       const saved = localStorage.getItem('sakaar_movie_bookings');
@@ -2222,6 +2226,24 @@ export default function App() {
                 GEMINI
               </span>
             </button>
+
+            {/* Sakaar RESTful Microservices Hub Button */}
+            <button
+              id="open-restful-hub-nav-btn"
+              onClick={() => {
+                soundFx.buttonClick();
+                setRestfulInitialTab('incursions');
+                setIsRestfulHubOpen(true);
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white font-bold font-mono-tech text-xs sm:text-sm shadow-lg shadow-cyan-600/25 border border-cyan-400/50 transition group cursor-pointer"
+              title="Access the 6 Sakaar RESTful Services: Incursions, Arena, Market, Cloud Sync, Relic Forge, Marvel Gateway"
+            >
+              <Server className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform" />
+              <span>REST SERVICES</span>
+              <span className="px-1.5 py-0.2 rounded bg-slate-950/60 border border-cyan-300/40 text-[9px] font-mono text-cyan-200 hidden md:inline">
+                6 APIs
+              </span>
+            </button>
           </div>
         </div>
 
@@ -2264,6 +2286,10 @@ export default function App() {
           <TradeDepotView
             resources={resources}
             onExecuteTrade={handleExecuteTrade}
+            onOpenMarketApi={() => {
+              setRestfulInitialTab('market');
+              setIsRestfulHubOpen(true);
+            }}
           />
         )}
 
@@ -2429,6 +2455,17 @@ export default function App() {
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}
         onOpen={() => setIsChatbotOpen(true)}
+      />
+
+      {/* 6 RESTful Microservices & Game Systems Hub */}
+      <RestfulServicesDashboard
+        resources={resources}
+        onUpdateResources={setResources}
+        heroes={heroes}
+        buildings={buildings}
+        isOpen={isRestfulHubOpen}
+        onClose={() => setIsRestfulHubOpen(false)}
+        initialTab={restfulInitialTab}
       />
     </div>
   );

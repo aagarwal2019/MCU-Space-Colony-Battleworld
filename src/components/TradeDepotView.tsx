@@ -20,11 +20,13 @@ import { ColonyResources } from '../types';
 interface TradeDepotViewProps {
   resources: ColonyResources;
   onExecuteTrade: (tradeType: string) => void;
+  onOpenMarketApi?: () => void;
 }
 
 export const TradeDepotView: React.FC<TradeDepotViewProps> = ({
   resources,
   onExecuteTrade,
+  onOpenMarketApi,
 }) => {
   return (
     <div className="w-full bg-slate-950/80 border border-cyan-500/20 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-6">
@@ -40,14 +42,25 @@ export const TradeDepotView: React.FC<TradeDepotViewProps> = ({
             Exchange excess scrap, purchase critical hydro-rations, recruit stranded wanderers, and acquire exotic black-market supplies.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono-tech">
-          <span className="text-slate-400">YOUR TREASURY:</span>
-          <span className="text-purple-400 font-bold flex items-center gap-1">
-            <Coins className="w-3.5 h-3.5" /> {Math.round(resources.vibraniumCredits)} Units
-          </span>
-          <span className="text-amber-400 font-bold flex items-center gap-1">
-            <Wrench className="w-3.5 h-3.5" /> {Math.round(resources.scrap)} Scrap
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenMarketApi && (
+            <button
+              onClick={onOpenMarketApi}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-slate-950 font-bold font-mono-tech text-xs shadow-md transition flex items-center gap-1.5"
+            >
+              <Coins className="w-3.5 h-3.5" />
+              <span>LIVE BLACK MARKET (`/api/market`)</span>
+            </button>
+          )}
+          <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono-tech">
+            <span className="text-slate-400">TREASURY:</span>
+            <span className="text-purple-400 font-bold flex items-center gap-1">
+              <Coins className="w-3.5 h-3.5" /> {Math.round(resources.vibraniumCredits)}
+            </span>
+            <span className="text-amber-400 font-bold flex items-center gap-1">
+              <Wrench className="w-3.5 h-3.5" /> {Math.round(resources.scrap)}
+            </span>
+          </div>
         </div>
       </div>
 
