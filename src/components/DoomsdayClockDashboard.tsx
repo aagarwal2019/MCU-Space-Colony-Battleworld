@@ -24,8 +24,9 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { ColonyResources, MCUHero, MultiverseTimeline } from '../types';
+import { ColonyResources, MCUHero, MultiverseTimeline, ResourceRates, ColonyBuilding } from '../types';
 import { soundFx } from '../utils/audio';
+import { ThreatForecastWidget } from './ThreatForecastWidget';
 
 interface DoomsdayClockDashboardProps {
   resources: ColonyResources;
@@ -34,6 +35,9 @@ interface DoomsdayClockDashboardProps {
   timelines: MultiverseTimeline[];
   addLog: (message: string, type?: 'info' | 'success' | 'warning' | 'danger') => void;
   gameSpeed: number;
+  rates?: ResourceRates;
+  buildings?: ColonyBuilding[];
+  cycle?: number;
 }
 
 export const DoomsdayClockDashboard: React.FC<DoomsdayClockDashboardProps> = ({
@@ -43,6 +47,9 @@ export const DoomsdayClockDashboard: React.FC<DoomsdayClockDashboardProps> = ({
   timelines,
   addLog,
   gameSpeed,
+  rates,
+  buildings,
+  cycle = 1,
 }) => {
   // Doomsday Clock Time in seconds to Midnight (e.g., 90s = 1m 30s to Doomsday)
   // Normal state fluctuates between 45s and 180s based on Incursion Threat and player protocols
@@ -509,6 +516,18 @@ export const DoomsdayClockDashboard: React.FC<DoomsdayClockDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 10-Cycle Threat Forecast Telemetry & Stabilization Planning Widget */}
+      <ThreatForecastWidget
+        resources={resources}
+        setResources={setResources}
+        rates={rates}
+        buildings={buildings}
+        heroes={heroes}
+        cycle={cycle}
+        addLog={addLog}
+        onRewindClock={(secs) => setSecondsToMidnight(prev => Math.min(180, prev + secs))}
+      />
 
       {/* Interactive Emergency Doomsday Protocols & Entropy Wave Graph */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

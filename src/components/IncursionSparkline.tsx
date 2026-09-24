@@ -1,18 +1,28 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   ReferenceLine,
 } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, Activity, Gauge } from 'lucide-react';
+import { ResourceRates, ColonyResources } from '../types';
 
 export interface IncursionHistoryPoint {
   cycle: number;
   label: string;
   threat: number;
+}
+
+export interface SparklineChartPoint {
+  cycle: number;
+  label: string;
+  threat: number | null;
+  projectedThreat: number | null;
+  isProjected?: boolean;
 }
 
 interface IncursionSparklineProps {
@@ -25,35 +35,49 @@ interface IncursionSparklineProps {
   badgeStyle: string;
   dotStyle: string;
   description: string;
+  rates?: ResourceRates;
+  resources?: ColonyResources;
 }
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: Array<{ payload: IncursionHistoryPoint }>;
+  payload?: Array<{ payload: SparklineChartPoint }>;
 }
 
 const SparklineTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const isProj = !!data.isProjected;
+    const rawVal = isProj ? data.projectedThreat : (data.threat ?? data.projectedThreat);
+    const threatVal = Math.round(rawVal ?? 0);
     const severityTier = 
-      data.threat >= 75 ? 'CRITICAL' : 
-      data.threat >= 50 ? 'ELEVATED' : 
-      data.threat >= 25 ? 'MODERATE' : 'STABLE';
+      threatVal >= 75 ? 'CRITICAL' : 
+      threatVal >= 50 ? 'ELEVATED' : 
+      threatVal >= 25 ? 'MODERATE' : 'STABLE';
 
     return (
-      <div className="bg-slate-950/95 border border-slate-700/90 px-2.5 py-1.5 rounded-md shadow-xl text-[10px] font-mono-tech space-y-0.5">
+      <div className="bg-slate-950/95 border border-slate-700/90 px-2.5 py-1.5 rounded-md shadow-xl text-[10px] font-mono-tech space-y-0.5 z-50">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-slate-400">{data.label}:</span>
-          <span className="font-bold text-amber-300">{data.threat}% Threat</span>
+          <span className="text-slate-400">
+            {isProj ? `Projected (${data.label}):` : `${data.label}:`}
+          </span>
+          <span className={`font-bold ${isProj ? 'text-cyan-300' : 'text-amber-300'}`}>
+            {threatVal}% {isProj ? 'Anticipated' : 'Threat'}
+          </span>
         </div>
         <div className="text-[9px] text-slate-500 flex items-center justify-between gap-1">
           <span>Tier:</span>
           <span className={`font-bold ${
-            data.threat >= 75 ? 'text-rose-400' :
-            data.threat >= 50 ? 'text-amber-400' :
-            data.threat >= 25 ? 'text-cyan-400' : 'text-emerald-400'
+            threatVal >= 75 ? 'text-rose-400' :
+            threatVal >= 50 ? 'text-amber-400' :
+            threatVal >= 25 ? 'text-cyan-400' : 'text-emerald-400'
           }`}>{severityTier}</span>
         </div>
+        {isProj && (
+          <div className="text-[8px] text-cyan-400/90 italic pt-0.5 border-t border-slate-800">
+            Current resource consumption continued
+          </div>
+        )}
       </div>
     );
   }
@@ -69,7 +93,90 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
   strokeColor,
   badgeStyle,
   description,
+  rates,
+  resources,
 }) => {
+  // Toggle Projection state
+  const [showProjection, setShowProjection] = useState<boolean>(false);
+
+  // Compute anticipated net incursion rate per cycle if current resource usage continues
+  const netRatePerCycle = useMemo(() => {
+    // 1. Doctor Doom multiversal collision constant: +4.2% / cycle
+    const baseDrift = 4.2;
+
+    // 2. Arc Power usage balance:
+    // Surplus suppresses rift (-0.08%/unit); Deficit/brownout accelerates rift (+0.12%/unit)
+    const powerNetVal = rates ? rates.powerNet : (resources && resources.power > 50 ? 12 : -6);
+    const powerEffect = powerNetVal > 0 
+      ? -Math.min(3.6, powerNetVal * 0.08) 
+      : Math.min(4.5, Math.abs(powerNetVal) * 0.12);
+
+    // 3. Scrap synthesis for barrier emitter maintenance
+    const scrapNetVal = rates ? rates.scrapNet : 18;
+    const scrapEffect = -Math.min(2.0, Math.max(0, scrapNetVal * 0.04));
+
+    // 4. Kinetic Defense Rating
+    const defRating = resources ? resources.defenseRating : 30;
+    const defenseEffect = -Math.min(2.5, defRating * 0.02);
+
+    // 5. Environmental distress
+    const envDistress = (resources && (resources.oxygen < 40 || resources.morale < 35)) 
+      ? 1.4 
+      : (resources && resources.oxygen >= 80 && resources.morale >= 70) ? -0.8 : 0;
+
+    return Math.round((baseDrift + powerEffect + scrapEffect + defenseEffect + envDistress) * 10) / 10;
+  }, [rates, resources]);
+
+  // Anticipated threat level in 5 cycles
+  const anticipatedIn5Cycles = useMemo(() => {
+    return Math.max(0, Math.min(100, Math.round(currentThreat + (netRatePerCycle * 5))));
+  }, [currentThreat, netRatePerCycle]);
+
+  // Prepare combined chart data (historical points + projected dotted points)
+  const chartData: SparklineChartPoint[] = useMemo(() => {
+    if (!showProjection) {
+      return history.map(h => ({
+        cycle: h.cycle,
+        label: h.label,
+        threat: h.threat,
+        projectedThreat: null,
+        isProjected: false,
+      }));
+    }
+
+    const points: SparklineChartPoint[] = history.map(h => ({
+      cycle: h.cycle,
+      label: h.label,
+      threat: h.threat,
+      projectedThreat: null,
+      isProjected: false,
+    }));
+
+    if (points.length > 0) {
+      // Connect projected line smoothly from the current historical point
+      const lastIndex = points.length - 1;
+      const lastPoint = points[lastIndex];
+      points[lastIndex] = {
+        ...lastPoint,
+        projectedThreat: Math.round(currentThreat),
+      };
+
+      // Project next 5 cycles based on current resource usage
+      for (let i = 1; i <= 5; i++) {
+        const nextCycle = lastPoint.cycle + i;
+        const projectedVal = Math.max(0, Math.min(100, Math.round(currentThreat + (netRatePerCycle * i))));
+        points.push({
+          cycle: nextCycle,
+          label: `+${i}C`,
+          threat: null,
+          projectedThreat: projectedVal,
+          isProjected: true,
+        });
+      }
+    }
+
+    return points;
+  }, [history, showProjection, currentThreat, netRatePerCycle]);
   // Determine the active threshold in real time based on current threat %
   const activeSeverity = useMemo(() => {
     const t = Math.round(currentThreat);
@@ -303,12 +410,44 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
 
       {/* Historical Trend Chart using Recharts over 30 Game Cycles & Visual Incursion Velocity Indicator */}
       <div className="bg-slate-900/95 rounded-lg p-2.5 border border-slate-800/80 shadow-inner">
-        <div className="flex items-center justify-between text-[9px] font-mono-tech text-slate-400 px-1 mb-1.5">
+        <div className="flex items-center justify-between text-[9px] font-mono-tech text-slate-400 px-1 mb-1.5 flex-wrap gap-1">
           <span className="flex items-center gap-1">
             <Activity className="w-2.5 h-2.5 text-cyan-400" />
-            30-Cycle Incursion Trend
+            30-Cycle Trend
           </span>
-          <span className="text-[9px] text-slate-500 font-mono">
+
+          {/* Small 'Toggle Projection' Switch */}
+          <div
+            id="toggle-projection-container"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800/80"
+          >
+            <span className="text-[7.5px] text-slate-300 font-bold uppercase tracking-tight">
+              Toggle Projection
+            </span>
+            <button
+              id="toggle-projection-switch"
+              type="button"
+              role="switch"
+              aria-checked={showProjection}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProjection(!showProjection);
+              }}
+              className={`w-6 h-3.5 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none focus:ring-1 focus:ring-cyan-400 cursor-pointer ${
+                showProjection ? 'bg-cyan-500 shadow-sm shadow-cyan-500/50' : 'bg-slate-700'
+              }`}
+              title="Overlay projected incursion threat levels if current resource usage continues"
+            >
+              <div
+                className={`w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  showProjection ? 'translate-x-2.5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          <span className="text-[8px] text-slate-500 font-mono">
             Low: {minThreat}% · High: {maxThreat}%
           </span>
         </div>
@@ -324,10 +463,10 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
             </div>
 
             <div className="w-full flex justify-center overflow-hidden">
-              <AreaChart
+              <ComposedChart
                 width={196}
                 height={74}
-                data={history}
+                data={chartData}
                 margin={{ top: 2, right: 2, left: 2, bottom: 0 }}
               >
                 <defs>
@@ -342,7 +481,7 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
                   tick={{ fontSize: 7, fill: '#64748b', fontFamily: 'monospace' }}
                   axisLine={false}
                   tickLine={false}
-                  interval={Math.max(1, Math.floor(history.length / 4))}
+                  interval={Math.max(1, Math.floor(chartData.length / 4))}
                 />
                 <Tooltip content={<SparklineTooltip />} />
 
@@ -366,6 +505,7 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
                   strokeOpacity={0.5} 
                 />
 
+                {/* Existing Historical Incursion Area */}
                 <Area
                   type="monotone"
                   dataKey="threat"
@@ -375,12 +515,40 @@ export const IncursionSparkline: React.FC<IncursionSparklineProps> = ({
                   fill="url(#incursionSparklineGrad30)"
                   dot={false}
                   activeDot={{ r: 3.5, stroke: '#ffffff', strokeWidth: 1.5, fill: strokeColor }}
-                  isAnimationActive={true}
-                  animationDuration={850}
-                  animationEasing="ease-in-out"
+                  isAnimationActive={false}
                 />
-              </AreaChart>
+
+                {/* Overlaid 'Projected Threat' Dotted Line */}
+                {showProjection && (
+                  <Line
+                    type="monotone"
+                    dataKey="projectedThreat"
+                    stroke="#22d3ee"
+                    strokeDasharray="3 3"
+                    strokeWidth={2}
+                    dot={{ r: 2, fill: '#22d3ee', stroke: '#083344', strokeWidth: 1 }}
+                    activeDot={{ r: 3.5, stroke: '#ffffff', strokeWidth: 1.5, fill: '#22d3ee' }}
+                    name="Projected Threat"
+                    connectNulls={false}
+                    isAnimationActive={false}
+                  />
+                )}
+              </ComposedChart>
             </div>
+
+            {/* Projected Threat Status Legend Bar when toggled ON */}
+            {showProjection && (
+              <div className="flex items-center justify-between text-[7.5px] font-mono-tech text-cyan-300 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-500/40 mt-1">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 border-b-2 border-dotted border-cyan-400" />
+                  <span className="font-bold">Projected Threat:</span>
+                  <span>~{anticipatedIn5Cycles}% in 5C</span>
+                </span>
+                <span className="text-slate-400">
+                  ({netRatePerCycle >= 0 ? `+${netRatePerCycle.toFixed(1)}` : netRatePerCycle.toFixed(1)}%/c)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Visual 'Incursion Velocity' Numeric Indicator next to the sparkline */}

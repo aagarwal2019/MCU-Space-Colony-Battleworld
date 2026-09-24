@@ -2313,7 +2313,8 @@ export default function App() {
               <div
                 id="doomsday-threat-tooltip"
                 role="tooltip"
-                className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-84 sm:w-[350px] rounded-xl bg-slate-950/95 border border-slate-700/80 shadow-2xl shadow-black/90 backdrop-blur-md opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 text-left font-sans normal-case transform group-hover:translate-y-0 translate-y-1 overflow-visible"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-84 sm:w-[350px] rounded-xl bg-slate-950/95 border border-slate-700/80 shadow-2xl shadow-black/90 backdrop-blur-md opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 z-50 text-left font-sans normal-case transform group-hover:translate-y-0 translate-y-1 overflow-visible"
               >
                 {/* Subtle Animated 'Threat Pulse' Background Overlay */}
                 <div
@@ -2353,6 +2354,8 @@ export default function App() {
                     badgeStyle={incursionThreatConfig.badgeStyle}
                     dotStyle={incursionThreatConfig.dotStyle}
                     description={incursionThreatConfig.description}
+                    rates={rates}
+                    resources={resources}
                   />
                 </div>
 
@@ -2597,6 +2600,9 @@ export default function App() {
             timelines={timelines}
             addLog={addLog}
             gameSpeed={gameSpeed}
+            rates={rates}
+            buildings={buildings}
+            cycle={cycle}
           />
         )}
 
