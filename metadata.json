@@ -1,6 +1,6 @@
 {
   "name": "Sakaar Outpost: MCU Space Colony",
-  "description": "Build and manage a thriving space colony on Sakaar powered by MCU heroes, Gemini AI Colony Guide Chatbot, and 6 full RESTful backend microservices: Incursions Engine, Grandmaster Arena, Black Market Exchange, Cloud Persistence Vault, Doctor Doom's Relic Forge, and Marvel Canon Gateway.",
+  "description": "Build and manage a thriving space colony on Sakaar powered by MCU heroes, Fire Emblem-style Support Conversations (C/B/A/S Ranks, Pair-Up Dual Strikes/Guards, and Mess Hall dining), Gemini AI Colony Guide Chatbot, and 6 full RESTful backend microservices.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

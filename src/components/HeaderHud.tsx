@@ -17,7 +17,8 @@ import {
   ScrollText,
   AlertTriangle,
   Clock,
-  Globe
+  Globe,
+  Film
 } from 'lucide-react';
 import { ColonyResources, ResourceRates } from '../types';
 
@@ -33,6 +34,8 @@ interface HeaderHudProps {
   onOpenLog: () => void;
   onOpenGuide: () => void;
   onResetColony: () => void;
+  onOpenMultiverseConvergence?: () => void;
+  onOpenEndgameEncore?: () => void;
 }
 
 export const HeaderHud: React.FC<HeaderHudProps> = ({
@@ -47,6 +50,8 @@ export const HeaderHud: React.FC<HeaderHudProps> = ({
   onOpenLog,
   onOpenGuide,
   onResetColony,
+  onOpenMultiverseConvergence,
+  onOpenEndgameEncore,
 }) => {
   const getMoraleColor = (val: number) => {
     if (val >= 75) return 'text-emerald-400';
@@ -77,13 +82,34 @@ export const HeaderHud: React.FC<HeaderHudProps> = ({
               <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold tracking-wider text-slate-100 font-display uppercase">
                   Sakaar Outpost
                 </h1>
                 <span className="text-xs px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-500/30 font-mono-tech">
                   SECTOR 4
                 </span>
+                {onOpenMultiverseConvergence && (
+                  <button
+                    onClick={onOpenMultiverseConvergence}
+                    className="flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded bg-gradient-to-r from-red-950 to-emerald-950 text-red-300 border border-red-500/60 font-mono-tech animate-pulse hover:border-red-400 hover:text-white transition cursor-pointer shadow-sm shadow-red-950"
+                    title="Multiverse is Collapsing! Click to open Battleworld War Room"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping shrink-0" />
+                    <span className="font-bold tracking-wider">MULTIVERSE COLLAPSING</span>
+                  </button>
+                )}
+                {onOpenEndgameEncore && (
+                  <button
+                    id="endgame-encore-header-btn"
+                    onClick={onOpenEndgameEncore}
+                    className="flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded bg-gradient-to-r from-amber-900/90 via-purple-900/90 to-indigo-950 text-amber-200 border border-amber-400/80 font-mono-tech hover:border-amber-300 hover:text-white hover:scale-105 transition cursor-pointer shadow-sm shadow-purple-950"
+                    title="Avengers: Endgame Encore releases this weekend! Click for Theatrical Celebration Protocols"
+                  >
+                    <Film className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span className="font-bold tracking-wider uppercase">ENDGAME ENCORE THIS WEEKEND</span>
+                  </button>
+                )}
                 {activeCrisis && (
                   <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-500/50 animate-pulse font-mono-tech">
                     <AlertTriangle className="w-3 h-3" /> CRISIS ACTIVE

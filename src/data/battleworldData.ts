@@ -143,6 +143,40 @@ export const INITIAL_WAR_TABLE_NODES: WarTableNode[] = [
     description: 'The sub-atomic nexus connecting all points of spacetime through microscopic Pym particle conduits.',
     tacticalPerk: 'Enables instant teleportation of hero strike teams between nodes without transit cooldowns.',
   },
+  {
+    id: 'node_hala',
+    name: 'Hala Imperial Citadel (Kree Capital)',
+    realityCode: 'Kree Throneworld',
+    x: 36,
+    y: 16,
+    color: '#0284c7', // sky-600
+    glowColor: 'rgba(2, 132, 199, 0.45)',
+    status: 'incursion_warning',
+    threatRate: 2.8,
+    stability: 64,
+    barrierIntegrity: 58,
+    assignedHeroIds: ['captain_marvel'],
+    filmSource: 'Captain Marvel & The Marvels',
+    description: 'The imperial throneworld of the Kree Empire, torn from its planetary orbit by Doctor Doom and fused into Battleworld\'s militarized northern frontier. Accuser battlefleets patrolled by Supreme Intelligence energy remnants.',
+    tacticalPerk: 'Kree Military Matrix: Boosts Colony Defense Rating by +45 and unlocks photon beam weapon emplacements against incursion raids.',
+  },
+  {
+    id: 'node_xandar',
+    name: 'Xandar Worldmind Spire (Nova Empire)',
+    realityCode: 'Nova Capital',
+    x: 66,
+    y: 84,
+    color: '#f59e0b', // amber-500
+    glowColor: 'rgba(245, 158, 11, 0.45)',
+    status: 'breached',
+    threatRate: 3.2,
+    stability: 52,
+    barrierIntegrity: 48,
+    assignedHeroIds: ['nova_corpsman'],
+    filmSource: 'Guardians of the Galaxy & Nova Corps',
+    description: 'The radiant capital of the Nova Empire, pulled from the Andromeda galaxy across collapsing space-time. The surviving Nova Worldmind coordinates multiversal emergency communications and shields the refugee perimeter.',
+    tacticalPerk: 'Nova Worldmind Array: Enhances Multiverse Influence generation by +35% and shields adjacent sectors from entropy decay.',
+  },
 ];
 
 export const INITIAL_COSMIC_RELICS: CosmicRelic[] = [

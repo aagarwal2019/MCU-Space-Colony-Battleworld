@@ -44,6 +44,17 @@ export interface HotCanonItem {
 }
 
 export const RECENT_MCU_HOT_CANON: HotCanonItem[] = [
+  // Limited-Time Theatrical Re-Release Event
+  {
+    id: 'avengers-endgame-encore',
+    title: 'Avengers: Endgame (Encore Edition)',
+    query: 'Avengers: Endgame Encore re-release this weekend bonus scenes Stan Lee tribute',
+    type: 'movie',
+    year: '2026',
+    phaseOrPlatform: 'Theatrical Encore',
+    tag: 'This Weekend in Theaters',
+    description: 'Special theatrical return of the monumental Infinity Saga finale with exclusive deleted scenes, Stan Lee tribute, and secret preview.'
+  },
   // Recent & Upcoming MCU Theatrical Movies (Phases 5 & 6)
   {
     id: 'spiderman-brand-new-day',
@@ -61,9 +72,9 @@ export const RECENT_MCU_HOT_CANON: HotCanonItem[] = [
     query: 'The Fantastic Four: First Steps',
     type: 'movie',
     year: '2025',
-    phaseOrPlatform: 'Phase 6',
-    tag: 'First Family',
-    description: '1960s retro-futuristic alternate universe introduction of Reed Richards, Sue Storm, and Galactus.'
+    phaseOrPlatform: 'Phase 6 (Earth-828)',
+    tag: 'First Family & Doomsday',
+    description: '1960s retro-futuristic alternate universe introduction of Reed Richards, Sue Storm, and Galactus before Doomsday.'
   },
   {
     id: 'thunderbolts-star',
@@ -94,16 +105,6 @@ export const RECENT_MCU_HOT_CANON: HotCanonItem[] = [
     phaseOrPlatform: 'Phase 5',
     tag: 'Multiverse Void',
     description: 'Wade Wilson and Logan traverse the TVA Void wasteland battling Cassandra Nova.'
-  },
-  {
-    id: 'fantastic-four-first-steps',
-    title: 'The Fantastic Four: First Steps',
-    query: 'The Fantastic Four: First Steps',
-    type: 'movie',
-    year: '2025',
-    phaseOrPlatform: 'Phase 6 (Earth-828)',
-    tag: 'First Steps & Doomsday',
-    description: 'Marvel\'s First Family in retro-futuristic 1960s Earth-828 defending their world from Galactus before Doomsday.'
   },
   {
     id: 'avengers-doomsday',
@@ -431,7 +432,7 @@ export const MCUIntelModal: React.FC<MCUIntelModalProps> = ({
                 const isSelected = query.toLowerCase() === item.query.toLowerCase() || query.toLowerCase() === item.title.toLowerCase();
                 return (
                   <button
-                    key={item.id}
+                    key={`chip-${item.id}`}
                     onClick={() => {
                       setQuery(item.query);
                       handleSearch(item.query);
@@ -884,7 +885,7 @@ export const MCUIntelModal: React.FC<MCUIntelModalProps> = ({
                   <div className="space-y-2">
                     {RECENT_MCU_HOT_CANON.filter(i => i.type === 'movie').map((item) => (
                       <button
-                        key={item.id}
+                        key={`movie-hot-${item.id}`}
                         onClick={() => {
                           setQuery(item.query);
                           handleSearch(item.query);
@@ -930,7 +931,7 @@ export const MCUIntelModal: React.FC<MCUIntelModalProps> = ({
                   <div className="space-y-2">
                     {RECENT_MCU_HOT_CANON.filter(i => i.type === 'show').map((item) => (
                       <button
-                        key={item.id}
+                        key={`show-hot-${item.id}`}
                         onClick={() => {
                           setQuery(item.query);
                           handleSearch(item.query);

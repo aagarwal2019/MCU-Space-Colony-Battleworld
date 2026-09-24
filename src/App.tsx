@@ -27,7 +27,8 @@ import {
   Ticket,
   Swords,
   Bot,
-  Server
+  Server,
+  Heart
 } from 'lucide-react';
 
 import { 
@@ -77,6 +78,19 @@ import { BattleworldCommandView } from './components/BattleworldCommandView';
 import { AutonomousCoPilotWidget } from './components/AutonomousCoPilotWidget';
 import { GeminiColonyGuideChatbot } from './components/GeminiColonyGuideChatbot';
 import { RestfulServicesDashboard } from './components/RestfulServicesDashboard';
+import { FireEmblemSupportHubModal } from './components/FireEmblemSupportHubModal';
+import { FireEmblemConversationModal } from './components/FireEmblemConversationModal';
+import { MultiverseCollapseBanner } from './components/MultiverseCollapseBanner';
+import { BattleworldConvergenceModal } from './components/BattleworldConvergenceModal';
+import { MultiverseRealityFractureOverlay } from './components/MultiverseRealityFractureOverlay';
+import { TVAOperationsView } from './components/TVAOperationsView';
+import { EndgameEncoreModal } from './components/EndgameEncoreModal';
+import { 
+  INITIAL_SUPPORT_PAIRS, 
+  HeroPairSupportData, 
+  SupportRank, 
+  generateDynamicSupportPair 
+} from './data/fireEmblemSupports';
 import { IncursionSparkline, IncursionHistoryPoint } from './components/IncursionSparkline';
 
 const SAVE_KEY = 'sakaar_outpost_colony_v1';
@@ -238,7 +252,7 @@ export default function App() {
   const [cycle, setCycle] = useState<number>(1);
   const [gameSpeed, setGameSpeed] = useState<number>(1);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'grid' | 'expeditions' | 'tech' | 'trade' | 'multiverse' | 'doomsday' | 'battleworld'>('grid');
+  const [activeTab, setActiveTab] = useState<'grid' | 'expeditions' | 'tech' | 'trade' | 'multiverse' | 'doomsday' | 'battleworld' | 'tva'>('grid');
 
   // Active Crisis
   const [activeCrisis, setActiveCrisis] = useState<ColonyCrisis | null>(null);
@@ -258,6 +272,7 @@ export default function App() {
   const [isMCUPhotosApiOpen, setIsMCUPhotosApiOpen] = useState<boolean>(false);
   const [photosApiHeroId, setPhotosApiHeroId] = useState<string | null>(null);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState<boolean>(false);
+  const [isEndgameEncoreModalOpen, setIsEndgameEncoreModalOpen] = useState<boolean>(false);
   const [isRestfulHubOpen, setIsRestfulHubOpen] = useState<boolean>(false);
   const [restfulInitialTab, setRestfulInitialTab] = useState<'incursions' | 'arena' | 'market' | 'cloud' | 'relics' | 'marvel'>('incursions');
   const [userBookings, setUserBookings] = useState<MovieTicketBooking[]>(() => {
@@ -292,6 +307,127 @@ export default function App() {
       return updated;
     });
   };
+
+  // Fire Emblem Supports & Bonds State
+  const [supportPairs, setSupportPairs] = useState<HeroPairSupportData[]>(() => {
+    try {
+      const saved = localStorage.getItem('sakaar_fe_support_pairs');
+      return saved ? JSON.parse(saved) : INITIAL_SUPPORT_PAIRS;
+    } catch {
+      return INITIAL_SUPPORT_PAIRS;
+    }
+  });
+  const [isSupportHubOpen, setIsSupportHubOpen] = useState<boolean>(false);
+  const [activeConversationPair, setActiveConversationPair] = useState<HeroPairSupportData | null>(null);
+  const [activeConversationRank, setActiveConversationRank] = useState<'C' | 'B' | 'A' | 'S' | null>(null);
+
+  // Multiverse Collapse & Battleworld Convergence State
+  const [isConvergenceModalOpen, setIsConvergenceModalOpen] = useState<boolean>(false);
+  const [isRealityRiftEffectActive, setIsRealityRiftEffectActive] = useState<boolean>(true);
+
+  const handleStabilizeLocalAnchor = () => {
+    if (resources.power < 50 || resources.scrap < 20) {
+      soundFx.playAlarm();
+      addLog('INSUFFICIENT RESOURCES: Reinforcing the Sakaar dimensional anchor requires 50 Arc Power and 20 Scrap.', 'warning');
+      return;
+    }
+    setResources(prev => ({
+      ...prev,
+      power: Math.max(0, prev.power - 50),
+      scrap: Math.max(0, prev.scrap - 20),
+      incursionThreat: Math.max(5, prev.incursionThreat - 12),
+      multiverseInfluence: prev.multiverseInfluence + 40,
+      morale: Math.min(100, prev.morale + 5),
+    }));
+    soundFx.playAbility();
+    addLog('DIMENSIONAL ANCHOR REINFORCED: Sakaar Outpost stabilized against Doctor Doom\'s pull! Incursion threat reduced by 12% and gained +40 Multiverse Influence.', 'success');
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sakaar_fe_support_pairs', JSON.stringify(supportPairs));
+    } catch (e) {
+      console.error('Failed to cache support pairs', e);
+    }
+  }, [supportPairs]);
+
+  const handleAddSupportPoints = (pairId: string, points: number) => {
+    setSupportPairs(prev => prev.map(p => {
+      if (p.pairId === pairId) {
+        return {
+          ...p,
+          currentPoints: p.currentPoints + points,
+        };
+      }
+      return p;
+    }));
+  };
+
+  const handleCompleteConversation = (pairId: string, rank: SupportRank) => {
+    setSupportPairs(prev => prev.map(p => {
+      if (p.pairId === pairId) {
+        const viewed = p.viewedRanks.includes(rank) ? p.viewedRanks : [...p.viewedRanks, rank];
+        let currentRank = p.currentRank;
+        const rankWeights: Record<SupportRank, number> = { NONE: 0, C: 1, B: 2, A: 3, S: 4 };
+        if (rankWeights[rank] > rankWeights[currentRank]) {
+          currentRank = rank;
+        }
+
+        return {
+          ...p,
+          currentRank,
+          viewedRanks: viewed,
+        };
+      }
+      return p;
+    }));
+
+    const rankBonus = rank === 'S' ? 50 : (rank === 'A' ? 30 : (rank === 'B' ? 20 : 10));
+    setResources(prev => ({
+      ...prev,
+      multiverseInfluence: prev.multiverseInfluence + rankBonus,
+      morale: Math.min(100, prev.morale + 15),
+      defenseRating: prev.defenseRating + (rank === 'S' ? 25 : 10),
+    }));
+
+    const pair = supportPairs.find(p => p.pairId === pairId);
+    const h1 = heroes.find(h => h.id === pair?.hero1Id);
+    const h2 = heroes.find(h => h.id === pair?.hero2Id);
+
+    addLog(`FIRE EMBLEM SUPPORT RANK ${rank} SEALED: ${h1?.heroName || 'Hero 1'} & ${h2?.heroName || 'Hero 2'} unlocked "${pair?.tiers[rank as 'C'|'B'|'A'|'S']?.title}"! (${pair?.tiers[rank as 'C'|'B'|'A'|'S']?.unlockedPerkDescription})`, 'success');
+  };
+
+  const handleCreateNewPair = (hero1OrId: MCUHero | string, hero2OrId: MCUHero | string, customTitle?: string) => {
+    const id1 = typeof hero1OrId === 'string' ? hero1OrId : hero1OrId.id;
+    const id2 = typeof hero2OrId === 'string' ? hero2OrId : hero2OrId.id;
+    const h1 = typeof hero1OrId === 'object' ? hero1OrId : heroes.find(h => h.id === id1);
+    const h2 = typeof hero2OrId === 'object' ? hero2OrId : heroes.find(h => h.id === id2);
+    if (!h1 || !h2) return;
+
+    const newPair = generateDynamicSupportPair(h1, h2, customTitle);
+    setSupportPairs(prev => [newPair, ...prev]);
+    addLog(`HERO BOND FORGED: "${newPair.title}" (${h1.heroName} & ${h2.heroName}) established! Send them to the Mess Hall to deepen their bond.`, 'info');
+  };
+
+  const handleUpdatePairTitle = (pairId: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+    setSupportPairs(prev => prev.map(p => {
+      if (p.pairId === pairId) {
+        return {
+          ...p,
+          title: trimmed,
+        };
+      }
+      return p;
+    }));
+    addLog(`HERO BOND RENAMED: Support bond updated to "${trimmed}".`, 'info');
+  };
+
+  const handleOpenConversation = (pairData: HeroPairSupportData, rank: 'C' | 'B' | 'A' | 'S') => {
+    setActiveConversationPair(pairData);
+    setActiveConversationRank(rank);
+  };
   const [selectedTileForBuild, setSelectedTileForBuild] = useState<GridTile | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
 
@@ -310,6 +446,13 @@ export default function App() {
       cycle: 1,
       type: 'info',
       message: 'Avengers Sakaar Outpost initialized. Tony Stark, Rocket Raccoon, and Dr. Banner have assumed station posts.',
+    },
+    {
+      id: 'log_endgame_encore',
+      timestamp: Date.now() + 1,
+      cycle: 1,
+      type: 'success',
+      message: '🎬 MARVEL STUDIOS THEATRICAL EVENT: "Avengers: Endgame Encore" returns to theaters this weekend with exclusive bonus footage! Claim celebration protocols in the command deck.',
     }
   ]);
 
@@ -715,6 +858,18 @@ export default function App() {
         addLog(`Sol Cycle ${nextC} dawned over Sakaar. Transponders scanning wasteland scrap orbits.`, 'info');
         return nextC;
       });
+
+      // Passive Fire Emblem support bonding through colony teamwork
+      setSupportPairs((prev) => {
+        return prev.map((pair) => {
+          // Add +2 passive affinity points each cycle
+          const nextPoints = pair.currentPoints + 2;
+          return {
+            ...pair,
+            currentPoints: nextPoints,
+          };
+        });
+      });
     }, 60000 / gameSpeed);
 
     return () => clearInterval(cycleInterval);
@@ -1028,6 +1183,43 @@ export default function App() {
         } else {
           addLog(`Agent Mobius stabilized localized timeline variations with his TVA TemPad (+150 Power, +15 Morale).`, 'success');
         }
+        break;
+
+      case 'tva_incursion_sweep': // Hunter B-15 (TVA Commander)
+        setResources(prev => ({
+          ...prev,
+          incursionThreat: Math.max(0, prev.incursionThreat - 10),
+          defenseRating: prev.defenseRating + 30,
+          morale: Math.min(100, prev.morale + 10),
+        }));
+        if (activeCrisis && (activeCrisis.threatType === 'raiders' || activeCrisis.threatType === 'temporal_rift')) {
+          setActiveCrisis(null);
+          addLog(`Hunter B-15 led MINUTEMEN INCURSION SWEEP! Subdued anomalies with TVA Time Sticks and dissolved hostile raiders (+30 Defense, -10% Incursion Threat, Crisis Defeated)!`, 'success');
+        } else {
+          addLog(`Hunter B-15 led MINUTEMEN INCURSION SWEEP! Patrol secured the perimeter (-10% Incursion Threat, +30 Defense).`, 'success');
+        }
+        break;
+
+      case 'tva_throughput_multiplier': // Ouroboros (O.B.)
+        setResources(prev => ({
+          ...prev,
+          power: Math.min(prev.maxPower, prev.power + 300),
+          chronoCores: prev.chronoCores + 1,
+          morale: Math.min(100, prev.morale + 15),
+        }));
+        setBuildings(prev => prev.map(b => ({ ...b, health: b.maxHealth })));
+        addLog(`O.B. engaged THROUGHPUT MULTIPLIER OVERCHARGE! Widened the temporal intake ring (+300 Power, +1 Chrono-Core, all structures repaired)!`, 'success');
+        break;
+
+      case 'tva_casey_contraband': // Casey (TVA Evidence)
+        setResources(prev => ({
+          ...prev,
+          power: Math.min(prev.maxPower, prev.power + 200),
+          scrap: Math.min(prev.maxScrap, prev.scrap + 150),
+          vibraniumCredits: prev.vibraniumCredits + 75,
+          morale: Math.min(100, prev.morale + 10),
+        }));
+        addLog(`Casey emptied his desk drawer of TVA Paperweight Infinity Stones & variant trinkets (+200 Power, +150 Scrap, +75 Credits)!`, 'success');
         break;
 
       case 'oxe_buyout': // Aiko Maki (OXE Group)
@@ -1976,10 +2168,26 @@ export default function App() {
     }
   };
 
+  const pendingConversationsCount = supportPairs.filter(pair => {
+    const ranks: ('C' | 'B' | 'A' | 'S')[] = ['C', 'B', 'A', 'S'];
+    for (const r of ranks) {
+      if (pair.currentPoints >= pair.tiers[r].requiredPoints && !pair.viewedRanks.includes(r)) {
+        return true;
+      }
+    }
+    return false;
+  }).length;
+
   const selectedBuilding = buildings.find(b => b.id === selectedBuildingId) || null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans sakaar-dust selection:bg-cyan-500 selection:text-slate-950">
+      {/* Multiverse Reality Fracture Ambient Overlay */}
+      <MultiverseRealityFractureOverlay
+        isActive={isRealityRiftEffectActive}
+        incursionThreat={resources.incursionThreat}
+      />
+
       {/* Top HUD Bar */}
       <HeaderHud
         resources={resources}
@@ -1996,10 +2204,24 @@ export default function App() {
         onOpenLog={() => setIsLogDrawerOpen(true)}
         onOpenGuide={() => setIsGuideOpen(true)}
         onResetColony={handleResetColony}
+        onOpenMultiverseConvergence={() => setIsConvergenceModalOpen(true)}
+        onOpenEndgameEncore={() => setIsEndgameEncoreModalOpen(true)}
       />
 
       {/* Main Operations Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4">
+        {/* Multiverse Collapse Indicator Banner */}
+        <MultiverseCollapseBanner
+          incursionThreat={resources.incursionThreat}
+          entropyPercent={94.6}
+          onOpenConvergenceModal={() => setIsConvergenceModalOpen(true)}
+          onNavigateToBattleworld={() => setActiveTab('battleworld')}
+          onNavigateToTva={() => setActiveTab('tva')}
+          onStabilizeLocalAnchor={handleStabilizeLocalAnchor}
+          isRealityRiftEffectActive={isRealityRiftEffectActive}
+          onToggleRealityRiftEffect={() => setIsRealityRiftEffectActive(prev => !prev)}
+        />
+
         {/* Navigation Tabs Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 p-2 rounded-2xl border border-slate-800 backdrop-blur-md relative z-20">
           <div className="flex items-center gap-1.5 overflow-x-auto sm:overflow-visible py-1">
@@ -2154,6 +2376,22 @@ export default function App() {
                 WAR TABLE & RELICS
               </span>
             </button>
+
+            <button
+              id="tva-chrono-hub-tab-btn"
+              onClick={() => setActiveTab('tva')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold font-mono-tech transition relative ${
+                activeTab === 'tva'
+                  ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800 text-white shadow-lg shadow-amber-500/30 border border-amber-400/60'
+                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 border border-amber-500/30'
+              }`}
+            >
+              <Clock className="w-4 h-4 text-amber-400 animate-spin-slow" />
+              <span>TVA CHRONO-HUB</span>
+              <span className="px-1.5 py-0.2 rounded bg-amber-950/80 border border-amber-400/40 text-[9px] font-mono text-amber-300 hidden sm:inline">
+                FOR ALL TIME
+              </span>
+            </button>
           </div>
 
           {/* Action Buttons: Live Intel & Hero Roster */}
@@ -2180,6 +2418,22 @@ export default function App() {
             >
               <Globe className="w-4 h-4 animate-pulse" />
               <span>LIVE MOVIE INTEL</span>
+            </button>
+
+            <button
+              id="open-endgame-encore-nav-btn"
+              onClick={() => {
+                soundFx.buttonClick();
+                setIsEndgameEncoreModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-600 via-purple-700 to-indigo-800 hover:from-amber-500 hover:to-indigo-700 text-amber-100 border border-amber-400/80 font-bold font-mono-tech text-xs sm:text-sm shadow-md shadow-purple-950/40 transition cursor-pointer"
+              title="Avengers: Endgame Encore releases this weekend! Open celebration protocols"
+            >
+              <Film className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>ENDGAME ENCORE</span>
+              <span className="px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 text-[9px] font-black uppercase hidden lg:inline">
+                THIS WEEKEND
+              </span>
             </button>
 
             <button
@@ -2243,6 +2497,28 @@ export default function App() {
               <span className="px-1.5 py-0.2 rounded bg-slate-950/60 border border-cyan-300/40 text-[9px] font-mono text-cyan-200 hidden md:inline">
                 6 APIs
               </span>
+            </button>
+
+            {/* Fire Emblem Hero Bonds & Support Hub Button */}
+            <button
+              id="open-fe-supports-nav-btn"
+              onClick={() => {
+                soundFx.buttonClick();
+                setIsSupportHubOpen(true);
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-500 hover:from-pink-500 hover:to-amber-400 text-white font-black font-mono-tech text-xs sm:text-sm shadow-lg shadow-pink-600/25 border border-pink-400/50 transition group cursor-pointer relative"
+              title="Open Fire Emblem Support Conversations, Support Ranks (C/B/A/S), Pair-Up Dual Strikes & Mess Hall"
+            >
+              <Heart className="w-4 h-4 text-pink-200 fill-pink-400 group-hover:scale-125 transition-transform" />
+              <span>FE SUPPORTS</span>
+              <span className="px-1.5 py-0.2 rounded bg-slate-950/60 border border-pink-300/40 text-[9px] font-mono text-pink-200 hidden sm:inline">
+                BONDS & MEALS
+              </span>
+              {pendingConversationsCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black flex items-center justify-center animate-bounce shadow-md">
+                  {pendingConversationsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -2333,6 +2609,18 @@ export default function App() {
             setBuildings={setBuildings}
             addLog={addLog}
             gameSpeed={gameSpeed}
+          />
+        )}
+
+        {activeTab === 'tva' && (
+          <TVAOperationsView
+            resources={resources}
+            setResources={setResources}
+            heroes={heroes}
+            onHeroAbility={(hero) => handleTriggerAbility(hero.id)}
+            addLog={addLog}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onOpenSupportHub={() => setIsSupportHubOpen(true)}
           />
         )}
       </main>
@@ -2466,6 +2754,62 @@ export default function App() {
         isOpen={isRestfulHubOpen}
         onClose={() => setIsRestfulHubOpen(false)}
         initialTab={restfulInitialTab}
+      />
+
+      {/* Fire Emblem Hero Bonds, Supports & Mess Hall Hub */}
+      <FireEmblemSupportHubModal
+        isOpen={isSupportHubOpen}
+        onClose={() => setIsSupportHubOpen(false)}
+        heroes={heroes}
+        resources={resources}
+        onUpdateResources={setResources}
+        supportPairs={supportPairs}
+        onAddSupportPoints={handleAddSupportPoints}
+        onOpenConversation={handleOpenConversation}
+        onCreateNewPair={handleCreateNewPair}
+        onUpdatePairTitle={handleUpdatePairTitle}
+      />
+
+      {/* Fire Emblem Visual Novel Support Conversation Player */}
+      <FireEmblemConversationModal
+        isOpen={activeConversationPair !== null && activeConversationRank !== null}
+        pairData={activeConversationPair}
+        targetRank={activeConversationRank}
+        hero1={heroes.find(h => h.id === activeConversationPair?.hero1Id) || null}
+        hero2={heroes.find(h => h.id === activeConversationPair?.hero2Id) || null}
+        onClose={() => {
+          setActiveConversationPair(null);
+          setActiveConversationRank(null);
+        }}
+        onCompleteConversation={handleCompleteConversation}
+      />
+
+      {/* Battleworld Convergence Secret Wars War Room Modal */}
+      <BattleworldConvergenceModal
+        isOpen={isConvergenceModalOpen}
+        onClose={() => setIsConvergenceModalOpen(false)}
+        resources={resources}
+        setResources={setResources}
+        heroes={heroes}
+        addLog={addLog}
+        onNavigateToTab={(tab) => {
+          setActiveTab(tab);
+          setIsConvergenceModalOpen(false);
+        }}
+      />
+
+      {/* Limited-Time Theatrical Event: Avengers: Endgame Encore Modal */}
+      <EndgameEncoreModal
+        isOpen={isEndgameEncoreModalOpen}
+        onClose={() => setIsEndgameEncoreModalOpen(false)}
+        resources={resources}
+        setResources={setResources}
+        addLog={addLog}
+        onOpenMCUIntel={(query) => {
+          setMcuIntelQuery(query);
+          setIsMCUIntelModalOpen(true);
+        }}
+        onOpenTicketsPortal={() => setIsTicketsModalOpen(true)}
       />
     </div>
   );

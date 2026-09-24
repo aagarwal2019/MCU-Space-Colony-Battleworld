@@ -196,6 +196,30 @@ export const MultiverseNexusView: React.FC<MultiverseNexusViewProps> = ({
             <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">
               Sakaar is encircled by interdimensional wormholes where discarded realities collide. By stabilizing branch timelines, repelling Incursions, and evolving heroes into Multiverse Apex forms, you safeguard existence and bend cosmic fate.
             </p>
+
+            {/* Multiverse Collapse & Battleworld Convergence Alert */}
+            <div className="p-3 rounded-xl bg-red-950/70 border border-red-500/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-red-950/50">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 animate-bounce" />
+                <div className="text-xs">
+                  <span className="font-bold text-red-300 font-mono uppercase mr-2 tracking-wide">
+                    MULTIVERSE COLLAPSE ACTIVE:
+                  </span>
+                  <span className="text-slate-200">
+                    Doctor Doom is converging alternate Earths and planetary remnants (<span className="text-cyan-300 font-semibold">Sakaar</span>, <span className="text-sky-300 font-semibold">Hala</span>, <span className="text-amber-300 font-semibold">Xandar</span>) into Battleworld!
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedReality('battleworld_nexus');
+                  setActiveSubTab('timelines');
+                }}
+                className="px-3 py-1 rounded-lg bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-mono font-bold text-xs shrink-0 cursor-pointer shadow-md transition"
+              >
+                INSPECT BATTLEWORLD NODE
+              </button>
+            </div>
           </div>
 
           {/* Quick Metrics Cards */}

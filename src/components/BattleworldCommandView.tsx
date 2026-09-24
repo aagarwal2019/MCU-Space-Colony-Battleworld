@@ -440,7 +440,7 @@ export const BattleworldCommandView: React.FC<BattleworldCommandViewProps> = ({
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-slate-300 font-bold">MULTIVERSAL TACTICAL OVERVIEW</span>
                 <span className="text-slate-500">|</span>
-                <span className="text-purple-400">8 CONNECTED CONTINUUMS</span>
+                <span className="text-purple-400 uppercase">{nodes.length} CONVERGED WORLDS &amp; PLANETS (SAKAAR, HALA, XANDAR, EARTHS)</span>
               </div>
               <div className="text-slate-400 text-[11px]">
                 Click node to lock telemetry coordinates

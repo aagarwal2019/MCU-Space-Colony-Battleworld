@@ -202,6 +202,125 @@ class SoundManager {
       // Ignore
     }
   }
+
+  // Fire Emblem-style Support Chimes & Fanfares
+  public playSupportHeart() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      [659.25, 880, 1174.66].forEach((freq, i) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.05);
+
+        gain.gain.setValueAtTime(0.06, now + i * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.05);
+        osc.stop(now + i * 0.05 + 0.2);
+      });
+    } catch {
+      // Ignore
+    }
+  }
+
+  public playSupportLevelUp() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      // Classic Fire Emblem ascending celestial chime arpeggio: C5, E5, G5, B5, C6, E6, G6
+      const arpeggio = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51, 1567.98];
+      arpeggio.forEach((freq, idx) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+
+        gain.gain.setValueAtTime(0.09, now + idx * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.06);
+        osc.stop(now + idx * 0.06 + 0.35);
+      });
+    } catch {
+      // Ignore
+    }
+  }
+
+  public playSupportFanfare() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      // S-Rank Soulbound triumphant harmonic chord
+      const chords = [
+        { freqs: [523.25, 659.25, 783.99], time: 0 },
+        { freqs: [587.33, 739.99, 880.00], time: 0.18 },
+        { freqs: [659.25, 830.61, 987.77], time: 0.36 },
+        { freqs: [1046.50, 1318.51, 1567.98, 2093.00], time: 0.54 }
+      ];
+
+      chords.forEach((chord) => {
+        chord.freqs.forEach((freq) => {
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + chord.time);
+
+          gain.gain.setValueAtTime(0.07, now + chord.time);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + chord.time + 0.45);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + chord.time);
+          osc.stop(now + chord.time + 0.45);
+        });
+      });
+    } catch {
+      // Ignore
+    }
+  }
+
+  public playDialogueAdvance() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1046.5, now);
+      osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.04);
+
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch {
+      // Ignore
+    }
+  }
 }
 
 export const soundFx = new SoundManager();

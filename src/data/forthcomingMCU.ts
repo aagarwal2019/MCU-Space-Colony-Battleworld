@@ -2,6 +2,41 @@ import { ForthcomingMCUProject } from '../types';
 
 export const FORTHCOMING_MCU_PROJECTS: ForthcomingMCUProject[] = [
   // -------------------------------------------------------------
+  // 0. PLAYING THIS WEEKEND IN THEATERS: AVENGERS: ENDGAME ENCORE
+  // -------------------------------------------------------------
+  {
+    id: 'avengers_endgame_encore',
+    title: 'Avengers: Endgame (Encore Edition)',
+    type: 'movie',
+    phase: 'Theatrical Encore Event & Doomsday Bridge',
+    releaseDate: 'September 25, 2026 (This Weekend Only)',
+    status: 'In Theaters',
+    theatricalStatus: 'in_theaters',
+    rating: 'PG-13',
+    runtime: '3h 08m',
+    formats: ['IMAX 3D', 'Dolby Cinema', '4DX', 'Standard Digital'],
+    ticketPrice: 19.50,
+    fandangoSearchUrl: 'https://www.fandango.com/search?q=Avengers+Endgame+Encore',
+    directorOrCreator: 'Anthony & Joe Russo (The Russo Brothers)',
+    starring: [
+      'Robert Downey Jr. (Tony Stark / Iron Man)',
+      'Chris Evans (Steve Rogers / Captain America)',
+      'Chris Hemsworth (Thor)',
+      'Mark Ruffalo (Dr. Bruce Banner / Hulk)',
+      'Scarlett Johansson (Natasha Romanoff / Black Widow)',
+      'Jeremy Renner (Clint Barton / Hawkeye)',
+      'Paul Rudd (Scott Lang / Ant-Man)',
+      'Josh Brolin (Thanos)'
+    ],
+    mcuWikiQuery: 'Avengers: Endgame',
+    mcuWikiUrl: 'https://marvelcinematicuniverse.fandom.com/wiki/Avengers:_Endgame',
+    posterUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=800&auto=format&fit=crop',
+    synopsis: 'Marvel Studios brings the monumental Infinity Saga finale back to theaters for a special limited-time weekend encore! Features an exclusive video introduction by director Anthony Russo, an unfinished Bruce Banner deleted scene, an emotional Stan Lee legacy tribute reel, and an exclusive theatrical sneak peek bridging into Avengers: Doomsday.',
+    loreConnection: 'Provides Quantum Realm chronal GPS schematics and Nano-Gauntlet energy calibration data used to stabilize Sakaar reality rifts.',
+    keyCharacters: ['Iron Man', 'Captain America', 'Thor', 'Hulk', 'Black Widow', 'Hawkeye', 'Ant-Man', 'Thanos'],
+  },
+
+  // -------------------------------------------------------------
   // 1. PLAYING NOW IN THEATERS (EXCLUSIVELY SPIDER-MAN: BRAND NEW DAY)
   // -------------------------------------------------------------
   {
